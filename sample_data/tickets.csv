@@ -1,0 +1,11 @@
+ticket_id,timestamp,category,device_type,error_message,repeat_incident,resolution_time_hrs
+TCK-1001,2026-05-01 08:30:00,Network,Host Controller,DHCP lease allocation failure,False,1.5
+TCK-1002,2026-05-01 09:15:00,Authentication,Cloud Gateway,Invalid API authorization token,False,0.5
+TCK-1003,2026-05-01 10:45:00,Network,Smart Switch,VLAN tag mismatch on trunk port,True,3.0
+TCK-1004,2026-05-02 11:00:00,Hardware,Audio Matrix,Unresponsive serial RS-232 interface,False,2.0
+TCK-1005,2026-05-02 13:20:00,Firmware,IP Touch Panel,OTA firmware hash validation error,True,4.5
+TCK-1006,2026-05-03 08:10:00,Network,Smart Switch,VLAN tag mismatch on trunk port,True,2.5
+TCK-1007,2026-05-03 14:00:00,Network,Host Controller,DHCP lease allocation failure,False,1.0
+TCK-1008,2026-05-04 09:30:00,Configuration,Thermostat Gateway,Missing BACnet routing entry,False,1.5
+TCK-1009,2026-05-04 15:45:00,Network,Smart Switch,VLAN tag mismatch on trunk port,True,3.0
+TCK-1010,2026-05-05 10:15:00,Authentication,Cloud Gateway,Invalid API authorization token,False,0.5
