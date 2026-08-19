@@ -2,17 +2,28 @@
 """
 Support Ticket Pattern Analyzer
 Parses enterprise support case logs to identify recurring root causes,
-repeat-incident rates, and candidates for SOP runbooks.
+repeat-incident rates, keyword signatures, and candidates for SOP runbooks.
 """
 
 import csv
 import json
+import re
 import sys
 from collections import Counter
 from pathlib import Path
 
+# Compiled regular expressions for free-text heuristic tagging
+KEYWORD_RULES = {
+    "VLAN / Trunking Conflict": re.compile(r"\b(vlan|trunk|tagged|untagged|native vlan)\b", re.IGNORECASE),
+    "DHCP / IP Lease Failure": re.compile(r"\b(dhcp|lease|ip allocation|exhaustion)\b", re.IGNORECASE),
+    "Authentication / Token Error": re.compile(r"\b(token|auth(entication)?|unauthorized|api key|credential)\b", re.IGNORECASE),
+    "Firmware / Hash Mismatch": re.compile(r"\b(firmware|hash|ota|checksum|corrupt image)\b", re.IGNORECASE),
+    "Serial / Hardware Drop": re.compile(r"\b(rs-?232|serial|unresponsive|baud|uart)\b", re.IGNORECASE),
+}
+
 
 def load_tickets(filepath: str) -> list[dict]:
+    """Load and validate ticket records from a CSV or JSON file."""
     path = Path(filepath)
 
     if not path.exists():
@@ -54,11 +65,22 @@ def load_tickets(filepath: str) -> list[dict]:
     return records
 
 
+def extract_keywords(text: str) -> list[str]:
+    """Match free-text fields against keyword signatures."""
+    matched_tags = []
+    for tag_name, pattern in KEYWORD_RULES.items():
+        if pattern.search(text):
+            matched_tags.append(tag_name)
+    return matched_tags or ["Unclassified Signature"]
+
+
 def analyze_tickets(tickets: list[dict]) -> dict:
+    """Analyze ticket metrics, root causes, repeat patterns, and keyword tags."""
     total_tickets = len(tickets)
     categories = Counter()
     errors = Counter()
     device_types = Counter()
+    keyword_signatures = Counter()
     repeat_count = 0
     total_resolution_time = 0.0
     resolution_time_tracked_count = 0
@@ -71,6 +93,11 @@ def analyze_tickets(tickets: list[dict]) -> dict:
         categories[cat] += 1
         errors[err] += 1
         device_types[dev] += 1
+
+        # Scan error text for keyword signatures
+        tags = extract_keywords(err)
+        for tag in tags:
+            keyword_signatures[tag] += 1
 
         repeat_val = str(ticket.get("repeat_incident", "")).lower()
         if repeat_val in {"true", "1", "yes"}:
@@ -99,19 +126,26 @@ def analyze_tickets(tickets: list[dict]) -> dict:
         "top_categories": categories.most_common(3),
         "top_errors": errors.most_common(3),
         "top_devices": device_types.most_common(3),
+        "top_signatures": keyword_signatures.most_common(3),
     }
 
 
 def print_report(metrics: dict) -> None:
-    print("=" * 60)
+    """Print formatted terminal report."""
+    print("=" * 65)
     print("       SUPPORT CASE PATTERN ANALYSIS REPORT")
-    print("=" * 60)
+    print("=" * 65)
     print(f"Total Cases Analyzed     : {metrics['total_tickets']}")
     print(f"Repeat Incidents Flagged : {metrics['repeat_incident_count']}")
     print(f"Overall Repeat Rate      : {metrics['repeat_incident_rate']:.1f}%")
 
     if metrics["avg_resolution_time_hrs"] is not None:
         print(f"Mean Resolution Time     : {metrics['avg_resolution_time_hrs']:.2f} hrs")
+
+    print("\n--- Heuristic Signature Trends (Keyword Matching) ---")
+    for rank, (sig, count) in enumerate(metrics["top_signatures"], 1):
+        pct = (count / metrics["total_tickets"]) * 100
+        print(f" {rank}. {sig:<30} -> {count} cases ({pct:.1f}%)")
 
     print("\n--- Top Root Cause Error Patterns ---")
     for rank, (err, count) in enumerate(metrics["top_errors"], 1):
@@ -134,7 +168,7 @@ def print_report(metrics: dict) -> None:
         print("     Action: Publish dedicated Standard Operating Procedure (SOP) runbook.")
     else:
         print(" [i] Issue spread is balanced across categories. Continue baseline monitoring.")
-    print("=" * 60)
+    print("=" * 65)
 
 
 def main() -> None:
