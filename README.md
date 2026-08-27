@@ -1,14 +1,13 @@
 # Support Ticket Pattern Analyzer
 
-A structured Python command-line utility designed to ingest support incident exports (CSV/JSON), aggregate error patterns, track repeat incidents, and highlight candidate issues for standard operating procedure (SOP) documentation.
+A Python CLI utility that ingests CRM/support incident exports (CSV/JSON), groups recurring error signatures, and calculates repeat-incident rates after customer go-live.
+Built to model the post-implementation review workflow used on 500+ annual cases: find which configuration and integration defects create ticket churn, then turn those patterns into runbooks.
+Features
 
-This tool models the data telemetry workflows used to analyze 500+ annual support cases, identifying root-cause trends and reducing repeat ticket volume by ~20%.
-
-## Features
-- **Format Agnostic**: Accepts both `.csv` and `.json` incident feeds.
-- **Root-Cause Grouping**: Aggregates recurring error codes and failure points across multi-vendor equipment.
-- **Repeat Incident Calculation**: Quantifies repeat-ticket percentages across daily and monthly queues.
-- **Defensive Input Handling**: Rejects malformed headers, corrupt rows, and wrong file structures with clean exit codes.
+Accepts CSV and JSON incident exports
+Groups recurring error codes and failure points
+Calculates repeat-ticket rates across daily and monthly queues
+Rejects malformed headers, corrupt rows, and bad file structures with clean exit codes
 
 ## Requirements
 - Python 3.9+ (Standard Library only)
